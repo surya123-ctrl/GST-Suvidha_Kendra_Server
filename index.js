@@ -34,7 +34,7 @@ db.once('open', () => {
 const ItemSchema = new mongoose.Schema({
     name: String,
     email: String,
-    phone: Number,
+    phone: String,
     address: String,
     query: String,
 });
