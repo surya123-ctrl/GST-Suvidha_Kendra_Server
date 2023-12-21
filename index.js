@@ -6,8 +6,12 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
+const { check, validationResult } = require('express-validator');
 const MONGODB_URI = process.env.MONGODB_URI;
 const PORT = process.env.PORT || 5000;
+const USER_MAIL = process.env.USER_MAIL;
+const USER_PASSWORD = process.env.USER_PASSWORD;
+const ADMIN_MAIL = process.env.ADMIN_MAIL;
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
@@ -40,8 +44,8 @@ const Item = mongoose.model('Form_Data', ItemSchema);
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'suryatomar303@gmail.com',
-        pass: 'aopo pjyp sdik doys',
+        user: USER_MAIL,
+        pass: USER_PASSWORD,
     },
 });
 
@@ -64,15 +68,27 @@ app.get('/api/form', async (req, res) => {
         })
     }
 })
-app.post('/api/form', async (req, res) => {
+app.post('/api/form', [
+    check('name', 'Name is required').not().isEmpty(),
+    check('email', 'Email is required').not().isEmpty(),
+    check('phone', 'Phone is required').not().isEmpty(),
+    check('address', 'Address is required').not().isEmpty(),
+    check('query', 'Query is required').not().isEmpty()
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+    }
+
+
     const { name, email, phone, address, query } = req.body;
     const newItem = new Item({ name, email, phone, address, query });
     try {
         await newItem.save();
 
         const mailOptions = {
-            from: 'suryatomar303@gmail.com',
-            to: '20BCS4886@cuchd.in', // replace with admin's email address
+            from: USER_MAIL,
+            to: ADMIN_MAIL, // replace with admin's email address
             subject: 'New Form Submission',
             text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nAddress: ${address}\nQuery: ${query}`,
         };
