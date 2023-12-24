@@ -17,6 +17,16 @@ app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
+
+
+let userCount = 0;
+app.use((req, res, next) => {
+    userCount++;
+    next();
+})
+
+
+
 mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -111,6 +121,13 @@ app.post('/api/form', [
         })
     }
 
+})
+
+app.get('/api/userCount', (req, res) => {
+    res.json({
+        success: true,
+        userCount
+    })
 })
 
 app.listen(PORT, () => {
