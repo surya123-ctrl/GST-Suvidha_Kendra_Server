@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const cors = require('cors');
 const env = require('dotenv');
 env.config();
@@ -12,7 +13,7 @@ const URI = process.env.MONGODB_URI;
 
 //import models
 const userModel = require('./models/userModel');
-const { use } = require('passport');
+const formModel = require('./models/formModel');
 
 app.use(express.json());
 app.use(cors());
@@ -33,7 +34,7 @@ app.post('/register', async (req, res) => {
     console.log(user);
     try {
         const existingUser = await userModel.findOne({ email: user.email });
-        if (existingUser) return res.status(400).send({ message: `${user.email} is already registered please use another email` });
+        if (existingUser) return res.status(400).send({ message: `${user.email} is already registered, Please use another email.` });
         const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,}$/;
 
         if (!passwordRegex.test(user.password)) {
@@ -98,8 +99,83 @@ app.post('/login', async (req, res) => {
     catch (error) {
         res.status(500).send({ message: "Error in Logging In", error });
     }
-    // console.log(user);
-    // res.send("Done");
+})
+
+// User count
+app.get('/userCount', async (req, res) => {
+    try {
+        const userCount = await userModel.countDocuments();
+        res.json({ userCount });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+})
+
+// Contact Form
+app.post('/form', async (req, res) => {
+    const formDetails = req.body;
+    console.log(formDetails);
+    try {
+        const createdFormData = await formModel.create(formDetails);
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'gstsuvidhakendraghvendra@gmail.com', // Replace with your email
+                pass: 'xhvv spbp idnq upat', // Replace with your email password or use an app-specific password
+            },
+        });
+
+        const mailOptions = {
+            from: 'gstsuvidhakendraghvendra@gmail.com',
+            to: 'suryatomar303@gmail.com', // Replace with the admin's email address
+            subject: 'New Form Submission',
+            html: `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                }
+                .container {
+                  max-width: 600px;
+                  margin: auto;
+                  padding: 20px;
+                  background-color: #14213d;
+                }
+                h1 {
+                  color: #fca311;
+                }
+                p {
+                  color: white;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>New Form Submission</h1>
+                <p><strong>Name:</strong> ${formDetails.name}</p>
+                <p><strong>Email:</strong> ${formDetails.email}</p>
+                <p><strong>Phone:</strong> ${formDetails.phone}</p>
+                <p><strong>Address:</strong> ${formDetails.address}</p>
+                <p><strong>Query:</strong> ${formDetails.query}</p>
+              </div>
+            </body>
+            </html>
+            `,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.status(201).send({ message: "Form Submitted Successfully!", createdFormData });
+    }
+    catch (error) {
+        console.error({ error: "Error in form", error });
+    }
 })
 
 app.listen(PORT, () => {
