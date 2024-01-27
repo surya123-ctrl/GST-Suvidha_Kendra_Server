@@ -10,7 +10,9 @@ env.config();
 const mongoose = require('mongoose');
 const PORT = process.env.PORT || 8000;
 const URI = process.env.MONGODB_URI;
-
+const USER_MAIL = process.env.USER_MAIL
+const USER_PASSWORD = process.env.USER_PASSWORD
+const ADMIN_MAIL = process.env.ADMIN_MAIL
 //import models
 const userModel = require('./models/userModel');
 const formModel = require('./models/formModel');
@@ -122,14 +124,14 @@ app.post('/form', async (req, res) => {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: 'gstsuvidhakendraghvendra@gmail.com', // Replace with your email
-                pass: 'xhvv spbp idnq upat', // Replace with your email password or use an app-specific password
+                user: USER_MAIL, // Replace with your email
+                pass: USER_PASSWORD // Replace with your email password or use an app-specific password
             },
         });
 
         const mailOptions = {
-            from: 'gstsuvidhakendraghvendra@gmail.com',
-            to: 'suryatomar303@gmail.com', // Replace with the admin's email address
+            from: USER_MAIL,
+            to: ADMIN_MAIL, // Replace with the admin's email address
             subject: 'New Form Submission',
             html: `
             <!DOCTYPE html>
