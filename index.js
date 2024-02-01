@@ -16,6 +16,7 @@ const ADMIN_MAIL = process.env.ADMIN_MAIL
 //import models
 const userModel = require('./models/userModel');
 const formModel = require('./models/formModel');
+const isAuthenticated = require('./isAuthenticated');
 
 app.use(express.json());
 app.use(cors());
@@ -74,7 +75,7 @@ app.post('/login', async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
     try {
-        const user = await userModel.findOne({ email: email })
+        const user = await userModel.findOne({ email: email });
         if (user) {
             bcrypt.compare(password, user.password, (err, result) => {
                 if (result) {
@@ -104,7 +105,7 @@ app.post('/login', async (req, res) => {
 })
 
 // User count
-app.get('/userCount', async (req, res) => {
+app.get('/userCount', isAuthenticated, async (req, res) => {
     try {
         const userCount = await userModel.countDocuments();
         res.json({ userCount });
@@ -116,7 +117,7 @@ app.get('/userCount', async (req, res) => {
 })
 
 // Contact Form
-app.post('/form', async (req, res) => {
+app.post('/form', isAuthenticated, async (req, res) => {
     const formDetails = req.body;
     console.log(formDetails);
     try {
