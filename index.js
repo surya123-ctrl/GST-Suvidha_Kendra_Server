@@ -75,14 +75,16 @@ app.post('/login', async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
     try {
-        const user = await userModel.findOne({ email: email });
+        const user = await userModel.findOne({ email: email })
         if (user) {
             bcrypt.compare(password, user.password, (err, result) => {
                 if (result) {
+                    const isAdmin = user.email === ADMIN_MAIL;
+                    console.log("Admin : ", isAdmin)
                     jwt.sign({ email: email }, "jwt-secret-key", (err, token) => {
                         if (!err) {
                             console.log("Token: ", token);
-                            res.send({ token: token, message: "Logged In Successfully!", name: user.name, id: user._id });
+                            res.send({ token: token, message: "Logged In Successfully!", name: user.name, id: user._id, isAdmin: isAdmin });
                         }
                         else {
                             console.log("Error in generating token");
@@ -178,6 +180,18 @@ app.post('/form', isAuthenticated, async (req, res) => {
     }
     catch (error) {
         console.error({ error: "Error in form", error });
+    }
+})
+
+app.get('/user-details', isAuthenticated, async (req, res) => {
+    try {
+        const data = await formModel.find();
+        console.log(data);
+        res.json(data);
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 })
 
